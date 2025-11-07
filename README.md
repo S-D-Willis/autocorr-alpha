@@ -79,7 +79,7 @@ A major issue was **sensitivity to the exact training span** (e.g., great at 40 
 
 ### Outcome
 
-Across 66 stocks, the final pipeline delivered a **+7% accuracy lift**, **Sharpe ~0.40** on the simple strategy, and **22% lower max drawdown** than the baseline strategy (still below buy‑and‑hold Sharpe ~0.50).
+Across 66 stocks, the final pipeline delivered a **+7% accuracy lift**, **Sharpe ~0.4** on the simple strategy, and **22% lower max drawdown** than buy-and-hold.
 
 This constrained single‑ticker approach demonstrates robust ML methodology applicable to broader multi‑asset strategies.
 
