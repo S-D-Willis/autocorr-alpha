@@ -8,7 +8,7 @@
 
 - **Severe constraint:** Single‑ticker, daily data only. No market/breadth/factor inputs.
 - **Autocorr focus:** Leverages persistence/mean‑reversion structure present in one price/volume series.
-- **Full pipeline:** Data → features → target → model → backtest → diagnostics, all in Python.
+- **Full pipeline:** Data → features → target → model → backtest → diagnostics, all in **[`Python`](Autocorr-alpha-pipeline.ipynb)** .
 
 ---
 
@@ -16,7 +16,7 @@
 
 1. **Data**: Fetch daily OHLCV for a single ticker (Yahoo Finance via `yfinance`).  
 2. **Features**: Autocorr‑oriented and single‑series transforms derived from OHLCV (momentum windows, slope/volatility state, rolling residual structure, volume/OBV dynamics, etc.).  
-3. **Baseline**: Random Forest with a “feature factory” and RFE; randomized search on hyperparams.  
+3. **First iteration**: Random Forest with a “feature factory” and RFE; randomized search on hyperparams.  
 4. **Model shift**: Move to **XGBoost** to handle nonlinear interactions, regularize better, and generate more trade-friendly predicted probabilities
 5. **Tuning**: Bayesian optimization via **Hyperopt** with a bounded, practical search space and careful early stopping.  
 6. **Stability**: **Time‑decay sample weighting** to reduce chaotic sensitivity to the exact train window length.  
@@ -69,9 +69,9 @@ $$
 
 This makes “significant moves” relative to prevailing volatility, not in fixed points/percent.
 
-### Baseline → iteration
+### iteration
 
-As a baseline, I built a feature factory and used **recursive feature elimination** to select an optimal subset per stock, training a **random forest classifier** with randomized search. See the baseline pipeline and results **[`here`](Autocorr-alpha-pipeline.ipynb)**. In short, the model erred on the side of caution, often predicting “no momentum”; however, when it did call momentum, direction accuracy was strong. A simple trading layer with probability‑weighted sizing and entry gating achieved ~0 Sharpe; naive variants did worse.
+As a first pass, I built a feature factory and used **recursive feature elimination** to select an optimal subset per stock, training a **random forest classifier** with randomized search. See the RFC pipeline and results **[`here`](RFC-autocorrelation.ipynb)**. In short, the model erred on the side of caution, often predicting “no momentum”; however, when it did call momentum, direction accuracy was strong. A simple trading layer with probability‑weighted sizing and entry gating achieved ~0 Sharpe; naive variants did worse.
 
 To improve, I generated a **smaller set of higher‑alpha features** emphasizing multi‑scale momentum, persistence, and regime‑aware volatility, switched the model to **XGBoost**, and upgraded hyperparameter optimization to **Hyperopt**. Early experiments sometimes produced zero or very few trees (no predictive power) due to an overly restrictive search space; widening the learning‑rate (`eta`) bounds enabled non‑trivial ensembles, after which I controlled capacity with **early stopping** and a **bounded search region**.
 
