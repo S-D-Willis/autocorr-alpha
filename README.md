@@ -28,9 +28,9 @@
 
 | Metric | XGBoost Model |
 |---|---:|
-| Ternary accuracy | **+7% lift** over baseline|
-| Sharpe | **+0.36** over baseline|
-| Max drawdown | **-22%** compared to baseline|
+| Ternary accuracy | **+7% lift** over naive|
+| Sharpe | **0.36**|
+| Max drawdown | **-22%** compared to buy-and-hold|
 
 **Interpretation:** The simple, single‑ticker strategy does not beat buy‑and‑hold Sharpe in this setup, which is nearly 0.2 points higher, but it does improve drawdown meaningfully while achieving a consistent accuracy lift under the volatility‑scaled target. Given the tight “autocorrelation‑only” constraint, the pipeline is a useful sandbox to demonstrate modeling rigor, diagnostics, and engineering choices likely to transfer to more realistic multi‑signal settings.
 
@@ -71,7 +71,7 @@ This makes “significant moves” relative to prevailing volatility, not in fix
 
 ### Baseline → iteration
 
-As a baseline, I built a feature factory and used **recursive feature elimination** to select an optimal subset per stock, training a **random forest classifier** with randomized search. See the baseline pipeline and results in **[`ADD`](ADD)**. In short, the model erred on the side of caution, often predicting “no momentum”; however, when it did call momentum, direction accuracy was strong. A simple trading layer with probability‑weighted sizing and entry gating achieved ~0 Sharpe; naive variants did worse.
+As a baseline, I built a feature factory and used **recursive feature elimination** to select an optimal subset per stock, training a **random forest classifier** with randomized search. See the baseline pipeline and results **[`Autocorr-alpha-pipeline.ipynb`](here)**. In short, the model erred on the side of caution, often predicting “no momentum”; however, when it did call momentum, direction accuracy was strong. A simple trading layer with probability‑weighted sizing and entry gating achieved ~0 Sharpe; naive variants did worse.
 
 To improve, I generated a **smaller set of higher‑alpha features** emphasizing multi‑scale momentum, persistence, and regime‑aware volatility, switched the model to **XGBoost**, and upgraded hyperparameter optimization to **Hyperopt**. Early experiments sometimes produced zero or very few trees (no predictive power) due to an overly restrictive search space; widening the learning‑rate (`eta`) bounds enabled non‑trivial ensembles, after which I controlled capacity with **early stopping** and a **bounded search region**.
 
