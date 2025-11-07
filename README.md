@@ -69,7 +69,7 @@ $$
 
 This makes “significant moves” relative to prevailing volatility, not in fixed points/percent.
 
-### iteration
+### Iteration
 
 As a first pass, I built a feature factory and used **recursive feature elimination** to select an optimal subset per stock, training a **random forest classifier** with randomized search. See the RFC pipeline and results **[`here`](RFC-autocorrelation.ipynb)**. In short, the model erred on the side of caution, often predicting “no momentum”; however, when it did call momentum, direction accuracy was strong. A simple trading layer with probability‑weighted sizing and entry gating achieved ~0 Sharpe; naive variants did worse.
 
@@ -77,7 +77,9 @@ To improve, I generated a **smaller set of higher‑alpha features** emphasizing
 
 A major issue was **sensitivity to the exact training span** (e.g., great at 40 months, poor at 45, good again at 50). I mitigated this by adding **time‑decay sample weights**, prioritizing recent observations.
 
-**Outcome.** Across 66 stocks, the final pipeline delivered a **+7% accuracy lift**, **Sharpe ~0.40** on the simple strategy, and **22% lower max drawdown** than the baseline strategy (still below buy‑and‑hold Sharpe ~0.50).
+### Outcome
+
+Across 66 stocks, the final pipeline delivered a **+7% accuracy lift**, **Sharpe ~0.40** on the simple strategy, and **22% lower max drawdown** than the baseline strategy (still below buy‑and‑hold Sharpe ~0.50).
 
 This constrained single‑ticker approach demonstrates robust ML methodology applicable to broader multi‑asset strategies.
 
