@@ -29,10 +29,10 @@
 | Metric | XGBoost Model |
 |---|---:|
 | Ternary accuracy | **+7% lift** over baseline|
-| Sharpe | **+0.4** over baseline|
+| Sharpe | **+0.36** over baseline|
 | Max drawdown | **-22%** compared to baseline|
 
-**Interpretation:** The simple, single‑ticker strategy does not beat buy‑and‑hold Sharpe in this setup, which is 0.1 points higher, but it does improve drawdown meaningfully while achieving a consistent accuracy lift under the volatility‑scaled target. Given the tight “autocorrelation‑only” constraint, the pipeline is a useful sandbox to demonstrate modeling rigor, diagnostics, and engineering choices likely to transfer to more realistic multi‑signal settings.
+**Interpretation:** The simple, single‑ticker strategy does not beat buy‑and‑hold Sharpe in this setup, which is nearly 0.2 points higher, but it does improve drawdown meaningfully while achieving a consistent accuracy lift under the volatility‑scaled target. Given the tight “autocorrelation‑only” constraint, the pipeline is a useful sandbox to demonstrate modeling rigor, diagnostics, and engineering choices likely to transfer to more realistic multi‑signal settings.
 
 ---
 
