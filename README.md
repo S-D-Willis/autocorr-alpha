@@ -27,7 +27,7 @@
 ## Results (universe of 66 stocks; daily data)
 
 | Metric | This pipeline |
-|---|---:|---:|
+|---|---:|
 | Ternary accuracy (vs. naive baseline) | **+7% lift** |
 | Sharpe (simple strategy) | **0.4** |
 | Buy‑and‑hold Sharpe (context) | **0.5** |
