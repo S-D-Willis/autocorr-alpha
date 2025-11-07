@@ -30,9 +30,9 @@
 |---|---:|
 | Ternary accuracy | **+7% lift** over baseline|
 | Sharpe | **+0.4** over baseline|
-| Max drawdown | **22% reduction** over baseline|
+| Max drawdown | **-22%** compared to baseline|
 
-**Interpretation:** The simple, single‑ticker strategy does not beat buy‑and‑hold Sharpe in this setup, but it does improve drawdown meaningfully while achieving a consistent accuracy lift under the volatility‑scaled target. Given the tight “autocorrelation‑only” constraint, the pipeline is a useful sandbox to demonstrate modeling rigor, diagnostics, and engineering choices likely to transfer to more realistic multi‑signal settings.
+**Interpretation:** The simple, single‑ticker strategy does not beat buy‑and‑hold Sharpe in this setup, which is 0.1 points higher, but it does improve drawdown meaningfully while achieving a consistent accuracy lift under the volatility‑scaled target. Given the tight “autocorrelation‑only” constraint, the pipeline is a useful sandbox to demonstrate modeling rigor, diagnostics, and engineering choices likely to transfer to more realistic multi‑signal settings.
 
 ---
 
@@ -45,11 +45,10 @@ I reframed the problem as **classification** with a volatility‑adjusted ternar
 ### Target definition
 
 Let:
-
-- \( \sigma_t \): 1‑step EWM volatility at time \( t \)  
-- \( h \): forecast horizon (e.g., 20 trading days)  
-- \( k \): sensitivity (default \(0.3\), optionally tuned)  
-- \( r_{t \to t+h} \): forward return over horizon \(h\)  
+- $\sigma_t$: 1‑step EWM volatility at time $t$
+- $h$: forecast horizon (e.g., 20 trading days)
+- $k$: sensitivity (default $0.3$, optionally tuned)
+- $r_{t \to t+h}$: forward return over horizon $h$
 
 Define the volatility threshold:
 
