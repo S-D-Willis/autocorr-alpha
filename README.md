@@ -14,6 +14,8 @@
 
 ## Approach
 
+![pipeline](https://github.com/S-D-Willis/autocorr-alpha/blob/5c073da1d6217457f8fbc9421b756a63cb095cbb/pipeline.png)
+
 1. **Data**: Fetch daily OHLCV for a single ticker (Yahoo Finance via `yfinance`).  
 2. **Features**: Autocorr‑oriented and single‑series transforms derived from OHLCV (momentum windows, slope/volatility state, rolling residual structure, volume/OBV dynamics, etc.).  
 3. **First iteration**: Random Forest with a “feature factory” and RFE; randomized search on hyperparams.  
