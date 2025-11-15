@@ -1,16 +1,68 @@
 # How Far Can You Get With Autocorrelation Alone?
+## Single-Ticker Momentum Detection via Machine Learning
 
-> **Research Question:** Using only each stock’s own daily OHLCV data (no cross‑sectional or fundamentals), how far can I go relying purely on autocorrelation and single‑series structure?
+
+> **Research Question:** Using only each stock’s own daily OHLCV data (no cross‑sectional, fundamental, or other data), how far can I go relying purely on autocorrelation and single‑series structure?
+
+### Key Results
+- **+7% classification accuracy lift** over baseline (40.1% PR-AUC vs 33.3% random)
+- **22% reduction in maximum drawdown** compared to buy-and-hold
+- **0.4 Sharpe ratio** with a simple probability-weighted equities trading strat 
+
+### Technical Highlights
+- **Volatility-scaled ternary classification** replacing traditional regression approaches
+- **PCA-based feature engineering** on rolling RSI and price slope bases
+- **Time-decay sample weighting** to mitigate training window sensitivity
+- **Bayesian hyperparameter optimization** via Hyperopt with carefully bounded search spaces
+- **Comprehensive backtesting framework** with transaction costs and realistic constraints
+---
+
+## Overview
+
+This project tackles a deliberately constrained problem: can we extract predictive signals from a single stock's price and volume history alone? 
+
+The main implementation is in [`Autocorr-alpha-pipeline.ipynb`](Autocorr-alpha-pipeline.ipynb), with my first-pass Random Forest approach preserved in [`RFC-autocorrelation.ipynb`](RFC-autocorrelation.ipynb) for comparison.
+
+### 1. Target Engineering: Volatility-Adjusted Ternary Classification
+
+Instead of predicting raw returns, I engineered a **market-regime-aware target**:
+
+```python
+τ_t = k · σ_t · √h  # Adaptive threshold based on current volatility
+
+y_t = { +1 if r_{t→t+h} > +τ_t    # Significant up move
+        -1 if r_{t→t+h} < -τ_t    # Significant down move
+         0 otherwise               # No significant momentum
+```
+
+The threshold scales with prevailing volatility, making "significant moves" relative to market conditions rather than fixed percentages.
+
+### 2. Feature Engineering: Autocorrelation-Focused Transformations
+
+Developed high-alpha features emphasizing single-series structure:
+
+#### Core Features
+- **Volatility metrics**: EWM volatility, Garman-Klass estimator
+- **Price positioning**: Donchian channel position
+- **Volume dynamics**: Volume/volatility ratio
+- **Trend indicators**: Distance from 100-day SMA, MACD histogram
+
+#### Advanced Composites 
+- **PCA on RSI spectrum**: Regressed principal components of a collection of RSI(n) values against future returns 
+- **PCA on price slopes**: Multi-scale momentum via PCA on slopes of various lookbacks 
+- **Torque indicator**: Bounce off of support level based on RSI-price-slope interactions
+- **Hurst × RSI interaction**: Combining fractal dimension with mean reversion
+- **OBV slope**: Directional volume accumulation via linear regression
+- **SMA ratio**: Fast/slow moving average convergence
+
+
 
 ---
 
-## Why this is interesting
 
-- **Severe constraint:** Single‑ticker, daily data only. No market/breadth/factor inputs.
-- **Autocorr focus:** Leverages persistence/mean‑reversion structure present in one price/volume series.
-- **Full pipeline:** Data → features → target → model → backtest → diagnostics, all in **[`Python`](Autocorr-alpha-pipeline.ipynb)** .
 
----
+
+
 
 ## Approach
 
@@ -75,7 +127,7 @@ This makes “significant moves” relative to prevailing volatility, not in fix
 
 As a first pass, I built a feature factory and used **recursive feature elimination** to select an optimal subset per stock, training a **random forest classifier** with randomized search. See the RFC pipeline and results **[`here`](RFC-autocorrelation.ipynb)**. In short, the model erred on the side of caution, often predicting “no momentum”; however, when it did call momentum, direction accuracy was strong. A simple trading layer with probability‑weighted sizing and entry gating achieved ~0 Sharpe; naive variants did worse.
 
-To improve, I generated a **smaller set of higher‑alpha features** emphasizing multi‑scale momentum, persistence, and regime‑aware volatility, switched the model to **XGBoost**, and upgraded hyperparameter optimization to **Hyperopt**. Early experiments sometimes produced zero or very few trees (no predictive power) due to an overly restrictive search space; widening the learning‑rate (`eta`) bounds enabled non‑trivial ensembles, after which I controlled capacity with **early stopping** and a **bounded search region**.
+To improve, I generated a **smaller set of higher‑alpha features** emphasizing multi‑scale momentum, persistence, and regime‑aware volatility, switched the model to **XGBoost**, and upgraded hyperparameter optimization to **Hyperopt**. Early experiments sometimes produced zero or very few trees (no predictive power) due to an overly expansive search space; constraining bounds for key parameters, such as the learning‑rate (`eta`), enabled non‑trivial ensembles, after which I controlled capacity with **early stopping** and a **bounded search region**.
 
 A major issue was **sensitivity to the exact training span** (e.g., great at 40 months, poor at 45, good again at 50). I mitigated this by adding **time‑decay sample weights**, prioritizing recent observations.
 
