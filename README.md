@@ -7,7 +7,7 @@
 ### Key Results
 - **+7% classification accuracy lift** over baseline (40.1% PR-AUC vs 33.3% random)
 - **22% reduction in maximum drawdown** compared to buy-and-hold
-- **0.4 Sharpe ratio** with a simple probability-weighted equities trading strat 
+- **0.4 Sharpe ratio** with a simple probability-weighted trading strat 
 
 ### Technical Highlights
 - **Volatility-scaled ternary classification** replacing traditional regression approaches
