@@ -132,6 +132,6 @@ sample_weights = balanced_class_weights * time_weights
 |---|---:|
 | Ternary accuracy | **+7% lift** over naive|
 | Sharpe | **0.4**|
-| Max drawdown | **-22%** compared to buy-and-hold|
+| Max drawdown | reduced by **22%** compared to buy-and-hold|
 
 ---
