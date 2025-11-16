@@ -122,7 +122,7 @@ sample_weights = balanced_class_weights * time_weights
 ### Overfitting to Training Data
 **Problem:** Overfitting.
 
-**Solution:** Allow for many trees during hyperparamater optimization to find the best configuration, and then severely restrict 'early_stopping_rounds' during final refit.
+**Solution:** Allow for many trees during hyperparamater optimization to find the best configuration, and then severely restrict `early_stopping_rounds` during final refit.
 
 ---
 
