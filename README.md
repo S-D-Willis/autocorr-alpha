@@ -55,9 +55,57 @@ Developed high-alpha features emphasizing single-series structure:
 - **OBV slope**: Directional volume accumulation via linear regression
 - **SMA ratio**: Fast/slow moving average convergence
 
+### 3. Model Architecture & Evolution: From Random Forest to XGBoost
 
+#### Initial Approach (RFC)
+- Random Forest with recursive feature elimination
+- Randomized search over hyperparameters
+- **Result:** Conservative predictions, ~0 Sharpe
 
+#### Final Approach (XGBoost)
+
+- **Bayesian optimization** via Hyperopt over refined search space
+- **Time-decay sample weighting** using exponential combined with class-based weighting
+- **Early stopping** separately callibrated for train and refit
+
+### 4. Robust Backtesting Framework
+- **Probability-weighted position sizing**: Position size ∝ |P(up) - P(down)|
+- **Dual-threshold entry/exit logic**: Enter at 15% confidence, exit below 5%
+- **Transaction costs**: 5 bps per trade
+- **Proper train/validation/test splits**: No lookahead bias
 ---
+
+## Main Difficulties & Subsequent Innovations
+
+### Pathological Hyperparameter Search Space 
+**Problem:** With too large of a search space the hyperparameter optimization arrived in 'dead-zones' where the model performance was seriously degraded (collapse outside of training data, trivial models, etc.).
+
+**Solution:** This was fixed by constructing a carefully bounded search space to ensure meaningful models:
+```python
+space = {
+    'learning_rate': hp.uniform('learning_rate', 0.01, 0.2),  # Wide enough for convergence
+    'max_depth': hp.quniform('max_depth', 2, 5, 1),           # Shallow trees for stability
+    'min_child_weight': hp.uniform('min_child_weight', 1, 15), # Regularization
+    'subsample': hp.uniform('subsample', 0.4, 0.9),           # Stochasticity
+    'colsample_bytree': hp.uniform('colsample_bytree', 0.4, 1.0),
+    'gamma': hp.uniform('gamma', 0, 5),                        # Minimum loss reduction
+    'reg_alpha': hp.loguniform('reg_alpha', -7, 1),           # L1 regularization
+    'reg_lambda': hp.loguniform('reg_lambda', -3, 2)          # L2 regularization
+}
+```
+
+### Extreme Sensitivity to Training Window
+**Problem:** Model performance varied chaotically with training window length (e.g., excellent at 40 months, poor at 45).
+
+**Solution:** Time-decay weighting prioritizes recent observations while maintaining sufficient history:
+```python
+days_from_end = (train_dates[-1] - train_dates).days
+time_weights = np.exp(-days_from_end / 250)  # 250 trading days decay
+sample_weights = balanced_class_weights * time_weights
+```
+
+### Overfitting to Training Data
+**Problem:** Model 
 
 
 
