@@ -27,15 +27,30 @@ The main implementation is in [`Autocorr-alpha-pipeline.ipynb`](Autocorr-alpha-p
 
 Instead of predicting raw returns, I engineered a **market-regime-aware target**:
 
-```python
-τ_t = k · σ_t · √h  # Adaptive threshold based on current volatility
+Let:
+- $\sigma_t$: 1‑step EWM volatility at time $t$
+- $h$: forecast horizon (e.g., 20 trading days)
+- $k$: sensitivity (default $0.3$, optionally tuned)
+- $r_{t \to t+h}$: forward return over horizon $h$
 
-y_t = { +1 if r_{t→t+h} > +τ_t    # Significant up move
-        -1 if r_{t→t+h} < -τ_t    # Significant down move
-         0 otherwise               # No significant momentum
-```
+Define the volatility threshold:
 
-The threshold scales with prevailing volatility, making "significant moves" relative to market conditions rather than fixed percentages.
+$$
+\tau_t = k \cdot \sigma_t \cdot \sqrt{h}
+$$
+
+and the ternary target:
+
+$$
+y_t =
+\begin{cases}
++1 & \text{if } r_{t \to t+h} > +\tau_t \\
+-1 & \text{if } r_{t \to t+h} < -\tau_t \\
+0  & \text{otherwise.}
+\end{cases}
+$$
+
+This makes “significant moves” relative to prevailing volatility, not in fixed points/percent.
 
 ### 2. Feature Engineering: Autocorrelation-Focused Transformations
 
@@ -105,84 +120,18 @@ sample_weights = balanced_class_weights * time_weights
 ```
 
 ### Overfitting to Training Data
-**Problem:** Model 
+**Problem:** Overfitting.
 
-
-
-
-
-
-## Approach
-
-![pipeline](https://github.com/S-D-Willis/autocorr-alpha/blob/5c073da1d6217457f8fbc9421b756a63cb095cbb/pipeline.png)
-
-1. **Data**: Fetch daily OHLCV for a single ticker (Yahoo Finance via `yfinance`).  
-2. **Features**: Autocorr‑oriented and single‑series transforms derived from OHLCV (momentum windows, slope/volatility state, rolling residual structure, volume/OBV dynamics, etc.).  
-3. **First iteration**: Random Forest with a “feature factory” and RFE; randomized search on hyperparams.  
-4. **Model shift**: Move to **XGBoost** to handle nonlinear interactions, regularize better, and generate more trade-friendly predicted probabilities
-5. **Tuning**: Bayesian optimization via **Hyperopt** with a bounded, practical search space and careful early stopping.  
-6. **Stability**: **Time‑decay sample weighting** to reduce chaotic sensitivity to the exact train window length.  
-7. **Trading test**: Probability‑weighted position sizing + evidence gating; compare against buy‑and‑hold.  
+**Solution:** Allow for many trees during hyperparamater optimization to find the best configuration, and then severely restrict 'early_stopping_rounds' during final refit.
 
 ---
 
-## Results (universe of 66 stocks; daily data)
+## Results (universe of 66 stocks)
 
 | Metric | XGBoost Model |
 |---|---:|
 | Ternary accuracy | **+7% lift** over naive|
 | Sharpe | **0.4**|
 | Max drawdown | **-22%** compared to buy-and-hold|
-
-**Interpretation:** The simple, single‑ticker strategy does not beat buy‑and‑hold Sharpe in this setup, which is nearly 0.2 points higher, but it does improve drawdown meaningfully while achieving a consistent accuracy lift under the volatility‑scaled target. Given the tight “autocorrelation‑only” constraint, the pipeline is a useful sandbox to demonstrate modeling rigor, diagnostics, and engineering choices likely to transfer to more realistic multi‑signal settings.
-
----
-
-## Details of Progress
-
-Traditional time‑series tools (ARMA/GARCH) were not particularly useful for prediction; however, examining AR residuals alongside rolling trade volume revealed connections that informed later feature engineering. Regularized regression using typical trading indicators also underperformed, so I changed approaches.
-
-I reframed the problem as **classification** with a volatility‑adjusted ternary target.
-
-### Target definition
-
-Let:
-- $\sigma_t$: 1‑step EWM volatility at time $t$
-- $h$: forecast horizon (e.g., 20 trading days)
-- $k$: sensitivity (default $0.3$, optionally tuned)
-- $r_{t \to t+h}$: forward return over horizon $h$
-
-Define the volatility threshold:
-
-$$
-\tau_t = k \cdot \sigma_t \cdot \sqrt{h}
-$$
-
-and the ternary target:
-
-$$
-y_t =
-\begin{cases}
-+1 & \text{if } r_{t \to t+h} > +\tau_t \\
--1 & \text{if } r_{t \to t+h} < -\tau_t \\
-0  & \text{otherwise.}
-\end{cases}
-$$
-
-This makes “significant moves” relative to prevailing volatility, not in fixed points/percent.
-
-### Iteration
-
-As a first pass, I built a feature factory and used **recursive feature elimination** to select an optimal subset per stock, training a **random forest classifier** with randomized search. See the RFC pipeline and results **[`here`](RFC-autocorrelation.ipynb)**. In short, the model erred on the side of caution, often predicting “no momentum”; however, when it did call momentum, direction accuracy was strong. A simple trading layer with probability‑weighted sizing and entry gating achieved ~0 Sharpe; naive variants did worse.
-
-To improve, I generated a **smaller set of higher‑alpha features** emphasizing multi‑scale momentum, persistence, and regime‑aware volatility, switched the model to **XGBoost**, and upgraded hyperparameter optimization to **Hyperopt**. Early experiments sometimes produced zero or very few trees (no predictive power) due to an overly expansive search space; constraining bounds for key parameters, such as the learning‑rate (`eta`), enabled non‑trivial ensembles, after which I controlled capacity with **early stopping** and a **bounded search region**.
-
-A major issue was **sensitivity to the exact training span** (e.g., great at 40 months, poor at 45, good again at 50). I mitigated this by adding **time‑decay sample weights**, prioritizing recent observations.
-
-### Outcome
-
-Across 66 stocks, the final pipeline delivered a **+7% accuracy lift**, **Sharpe ~0.4** on the simple strategy, and **22% lower max drawdown** than buy-and-hold.
-
-This constrained single‑ticker approach demonstrates robust ML methodology applicable to broader multi‑asset strategies.
 
 ---
